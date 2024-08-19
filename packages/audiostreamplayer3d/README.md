@@ -1,15 +1,13 @@
 # AudioStreamPlayer3D
 
-`AudioStreamPlayer3D` is a TypeScript class designed for 3D audio playback in a web environment. It leverages the Web Audio API to manage audio streams, allowing for precise control over spatial audio properties such as position, orientation, volume, and playback rate. It also includes features such as polyphony management and optional audio caching.
+`AudioStreamPlayer3D` is a TypeScript class designed for audio playback in a web environment.
+It aims to be lightweight and easy to use. Inspired by Godot and Howler.
 
 ## Features
 
-- **3D Audio Positioning:** Set the position and orientation of the audio source in 3D space.
-- **Volume and Playback Control:** Easily adjust the volume and playback rate of the audio.
 - **Polyphony Management:** Control the maximum number of concurrent audio sources.
 - **Audio Caching:** Optionally cache audio files for optimized performance.
-- **Looping and Seeking:** Support for looping audio and seeking to specific positions within the track.
-- **Disposal and Cleanup:** Proper resource management with the ability to dispose of audio nodes and remove cached data.
+- **3D Audio Positioning:** Set the position and orientation of the audio source in 3D space.
 
 ## Installation
 
@@ -44,7 +42,6 @@ const audioPlayer = new AudioStreamPlayer3D(
     volume: 0.8,
     maxPolyphony: 3,
     position: [0, 0, 0],
-    orientation: [0, 0, -1],
   }
 );
 ```
@@ -86,7 +83,7 @@ await audioPlayer.whenAllEnded();
 const audioContext = new AudioContext();
 
 const globalVolume = audioContext.createGain();
-globalVolume.connext(audioContext.destination);
+globalVolume.connect(audioContext.destination);
 
 const audioPlayer = new AudioStreamPlayer3D(
   audioContext,
@@ -106,6 +103,14 @@ const audioPlayer = new AudioStreamPlayer3D(
 - **context:** `AudioContext` - The Web Audio API context.
 - **sourcePath:** `string` - The path to the audio file.
 - **opts:** `Partial<AudioStreamPlayer3DOptions>` - Optional configuration object.
+  - **destination:** `AudioNode` - The destination node for the audio source. Defaults to `context.destination`.
+  - **useCache:** `boolean` - Whether to cache the audio buffer. Defaults to `true`.
+  - **loop:** `boolean` - Whether the audio should loop. Defaults to `false`.
+  - **volume:** `number` - Volume of the audio playback. Defaults to `1`.
+  - **playbackRate:** `number` - Playback rate of the audio. Defaults to `1`.
+  - **maxPolyphony:** `number` - Maximum number of concurrent audio sources. Defaults to `1`.
+  - **position:** `[x: number, y: number, z: number]` - Position of the audio source in 3D space. Defaults to `[0, 0, 0]`.
+  - **orientation:** `[x: number, y: number, z: number]` - Orientation of the audio source in 3D space. Defaults to `[0, 0, 0]`.
 
 ### Methods
 

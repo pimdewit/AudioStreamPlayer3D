@@ -18,8 +18,7 @@
     "url": "https://github.com/pimdewit/audiostreamplayer3d/issues"
   },
   "license": "MIT",
-  "private": false,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
