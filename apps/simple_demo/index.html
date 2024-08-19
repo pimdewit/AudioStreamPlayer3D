@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AudioStreamPlayer3D</title>
+
+    <style>
+      section {
+        display: grid;
+        gap: 0.5rem;
+        place-items: center;
+        padding-block: 8rem;
+        padding-inline: 1.5rem;
+        border: 1px solid;
+        margin-block: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <section>
+      <button id="initialise">Initialise</button>
+    </section>
+
+    <section class="controls">
+      <p>maxPolyphony = 1 (only single track instance is allowed to play)</p>
+      <button disabled id="play-loop">Play Loop</button>
+    </section>
+
+    <section class="controls">
+      <div>
+        <p>maxPolyphony = 1</p>
+        <button disabled id="play-dropped">Play Dropped</button>
+      </div>
+
+      <div>
+        <p>maxPolyphony = 2</p>
+        <button disabled id="play-dropped-multi">Play Dropped</button>
+        <output id="output-dropped-multi"></output>
+      </div>
+    </section>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
