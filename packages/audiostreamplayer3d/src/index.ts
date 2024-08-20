@@ -16,6 +16,7 @@ export interface AudioStreamPlayer3DOptions {
 }
 
 export class AudioStreamPlayer3D {
+  private _buffer: AudioBuffer | null = null;
   private _loop: boolean = false;
   private _playbackRate: number = 1;
   private _maxPolyphony: number = 1;
@@ -26,7 +27,6 @@ export class AudioStreamPlayer3D {
   readonly pannerNode: PannerNode;
   readonly gainNode: GainNode;
   readonly sources: AudioBufferSourceNode[] = [];
-  buffer: AudioBuffer = new AudioBuffer({ length: 0, sampleRate: 44100 });
 
   constructor(
     readonly context: AudioContext,
@@ -60,7 +60,7 @@ export class AudioStreamPlayer3D {
    */
   async loadAudio(): Promise<void> {
     const loadMethod = this._useCache ? loadAudioWithCaching : loadAudio;
-    this.buffer = await loadMethod(this.context, this.sourcePath);
+    this._buffer = await loadMethod(this.context, this.sourcePath);
   }
 
   /**
@@ -68,9 +68,9 @@ export class AudioStreamPlayer3D {
    */
   async play() {
     // If there is no buffer, attempt to load it.
-    if (!this.buffer) await this.loadAudio();
+    if (!this._buffer) await this.loadAudio();
     // Still no buffer? Exit early.
-    if (!this.buffer) return;
+    if (!this._buffer) return;
 
     // Manage polyphony.
     if (this.sources.length >= this._maxPolyphony) {
@@ -83,7 +83,7 @@ export class AudioStreamPlayer3D {
     }
 
     const source = this.context.createBufferSource();
-    source.buffer = this.buffer;
+    source.buffer = this._buffer;
     source.loop = this._loop;
     source.playbackRate.value = this._playbackRate;
     source.connect(this.pannerNode);
@@ -123,9 +123,9 @@ export class AudioStreamPlayer3D {
    * @param {number} time - The time in seconds to seek to.
    */
   seek(time: number) {
-    if (!this.buffer) return;
+    if (!this._buffer) return;
 
-    this._offset = time % this.buffer.duration;
+    this._offset = time % this._buffer.duration;
 
     // If currently playing, stop all sources and restart from the new offset
     if (this.sources.length > 0) {
@@ -267,5 +267,9 @@ export class AudioStreamPlayer3D {
       this.pannerNode.orientationY.value,
       this.pannerNode.orientationZ.value,
     ];
+  }
+
+  get buffer() {
+    return this._buffer!;
   }
 }
