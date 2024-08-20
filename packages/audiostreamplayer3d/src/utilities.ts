@@ -11,7 +11,7 @@ export const streamCache = new Map<string, AudioBuffer>();
  * @param {typeof window.fetch} fetch - Fetch method.
  * @returns {Promise<AudioBuffer>} A promise that resolves with the decoded AudioBuffer.
  */
-export async function loadAudioBuffer(
+export async function loadAudio(
   context: AudioContext,
   url: string,
   fetch = window.fetch
@@ -34,7 +34,7 @@ export async function loadAudioWithCaching(
   let buffer = streamCache.get(url);
 
   if (!buffer) {
-    buffer = await loadAudioBuffer(context, url);
+    buffer = await loadAudio(context, url);
     streamCache.set(url, buffer);
   }
 
@@ -57,95 +57,4 @@ export function createPannerNode(context: AudioContext): PannerNode {
   panner.coneOuterAngle = 0;
   panner.coneOuterGain = 0;
   return panner;
-}
-
-/**
- * Creates a GainNode for controlling audio volume.
- * @param {AudioContext} context - The AudioContext to use for creating the GainNode.
- * @returns {GainNode} The created GainNode.
- */
-export function createGainNode(context: AudioContext): GainNode {
-  return context.createGain();
-}
-
-/**
- * Creates an AudioBufferSourceNode and attaches it to the given PannerNode.
- * @param {AudioContext} context - The AudioContext to use for creating the source.
- * @param {AudioBuffer} buffer - The AudioBuffer to play.
- * @param {PannerNode} panner - The PannerNode to connect the source to.
- * @returns {AudioBufferSourceNode} The created and connected AudioBufferSourceNode.
- */
-export function createSourceNode(
-  context: AudioContext,
-  buffer: AudioBuffer,
-  panner: PannerNode
-): AudioBufferSourceNode {
-  const source = context.createBufferSource();
-  source.buffer = buffer;
-  source.connect(panner);
-  return source;
-}
-
-/**
- * Sets the position of the PannerNode in 3D space.
- * Replaces the deprecated setPosition method with direct property assignments.
- * @param {PannerNode} panner - The PannerNode to set the position on.
- * @param {number} x - The X coordinate of the audio source.
- * @param {number} y - The Y coordinate of the audio source.
- * @param {number} z - The Z coordinate of the audio source.
- */
-export function setPannerPosition(
-  panner: PannerNode,
-  x: number,
-  y: number,
-  z: number
-): void {
-  panner.positionX.value = x;
-  panner.positionY.value = y;
-  panner.positionZ.value = z;
-}
-
-/**
- * Sets the orientation of the PannerNode in 3D space.
- * Replaces the deprecated setOrientation method with direct property assignments.
- * @param {PannerNode} panner - The PannerNode to set the orientation on.
- * @param {number} x - The X direction of the audio source.
- * @param {number} y - The Y direction of the audio source.
- * @param {number} z - The Z direction of the audio source.
- */
-export function setPannerOrientation(
-  panner: PannerNode,
-  x: number,
-  y: number,
-  z: number
-): void {
-  panner.orientationX.value = x;
-  panner.orientationY.value = y;
-  panner.orientationZ.value = z;
-}
-
-/**
- * Sets the volume of a GainNode.
- * @param {GainNode} gainNode - The GainNode to set the volume on.
- * @param {number} volume - The volume level.
- */
-export function setVolume(gainNode: GainNode, volume: number) {
-  gainNode.gain.setValueAtTime(volume, gainNode.context.currentTime);
-}
-
-/**
- * Gets the volume of a GainNode.
- * @param {GainNode} gainNode - The GainNode to get the volume from.
- */
-export function getVolume(gainNode: GainNode) {
-  return gainNode.gain.value;
-}
-
-/**
- * Sets the playback rate of an AudioBufferSourceNode.
- * @param {AudioBufferSourceNode} source - The source to set the playback rate on.
- * @param {number} rate - The playback rate.
- */
-export function setPlaybackRate(source: AudioBufferSourceNode, rate: number) {
-  source.playbackRate.setValueAtTime(rate, source.context.currentTime);
 }

@@ -1,16 +1,4 @@
-import {
-  createGainNode,
-  createPannerNode,
-  createSourceNode,
-  getVolume,
-  loadAudioBuffer,
-  loadAudioWithCaching,
-  setPannerOrientation,
-  setPannerPosition,
-  setPlaybackRate,
-  setVolume,
-  streamCache,
-} from "./utilities";
+import { loadAudio, loadAudioWithCaching, streamCache } from "./utilities";
 
 export interface AudioStreamPlayer3DOptions {
   // Destination node to connect the gain to.
@@ -38,24 +26,31 @@ export class AudioStreamPlayer3D {
   readonly pannerNode: PannerNode;
   readonly gainNode: GainNode;
   readonly sources: AudioBufferSourceNode[] = [];
-  buffer: AudioBuffer | null = null;
+  buffer: AudioBuffer = new AudioBuffer({ length: 0, sampleRate: 44100 });
 
   constructor(
     readonly context: AudioContext,
     readonly sourcePath: string,
-    opts: Partial<AudioStreamPlayer3DOptions> = {}
+    {
+      useCache = true,
+      volume = 1,
+      maxPolyphony = 1,
+      position = [0, 0, 0],
+      orientation = [0, 0, 0],
+      destination = context.destination,
+    }: Partial<AudioStreamPlayer3DOptions> = {}
   ) {
-    this.pannerNode = createPannerNode(context);
-    this.gainNode = createGainNode(context);
+    this.pannerNode = context.createPanner();
+    this.gainNode = context.createGain();
 
-    this._useCache = opts.useCache ?? true;
-    if (opts.volume !== undefined) this.volume = opts.volume;
-    if (opts.maxPolyphony !== undefined) this.maxPolyphony = opts.maxPolyphony;
-    if (opts.position !== undefined) this.position = opts.position;
-    if (opts.orientation !== undefined) this.orientation = opts.orientation;
+    this._useCache = useCache;
+    this.volume = volume;
+    this.maxPolyphony = maxPolyphony;
+    this.position = position;
+    this.orientation = orientation;
 
     this.pannerNode.connect(this.gainNode);
-    this.gainNode.connect(opts.destination ?? context.destination);
+    this.gainNode.connect(destination);
   }
 
   /**
@@ -64,7 +59,7 @@ export class AudioStreamPlayer3D {
    * @returns {Promise<AudioBuffer>} A promise that resolves when the audio is loaded and decoded.
    */
   async loadAudio(): Promise<void> {
-    const loadMethod = this._useCache ? loadAudioWithCaching : loadAudioBuffer;
+    const loadMethod = this._useCache ? loadAudioWithCaching : loadAudio;
     this.buffer = await loadMethod(this.context, this.sourcePath);
   }
 
@@ -87,9 +82,11 @@ export class AudioStreamPlayer3D {
       }
     }
 
-    const source = createSourceNode(this.context, this.buffer, this.pannerNode);
+    const source = this.context.createBufferSource();
+    source.buffer = this.buffer;
     source.loop = this._loop;
     source.playbackRate.value = this._playbackRate;
+    source.connect(this.pannerNode);
 
     if (!this._loop) {
       // If not looping, we allow overlapping by pushing the source to the list.
@@ -162,7 +159,6 @@ export class AudioStreamPlayer3D {
     this.gainNode.disconnect();
 
     if (removeFromCache && this.sourcePath) streamCache.delete(this.sourcePath);
-    this.buffer = null;
 
     this._loop = false;
     this._playbackRate = 1;
@@ -218,11 +214,11 @@ export class AudioStreamPlayer3D {
    * Gets or sets the volume of the audio playback.
    */
   get volume(): number {
-    return getVolume(this.gainNode);
+    return this.gainNode.gain.value;
   }
 
   set volume(value: number) {
-    setVolume(this.gainNode, value);
+    this.gainNode.gain.value = value;
   }
 
   /**
@@ -235,7 +231,7 @@ export class AudioStreamPlayer3D {
   set playbackRate(value: number) {
     this._playbackRate = value;
     for (let index = 0; index < this.sources.length; index++) {
-      setPlaybackRate(this.sources[index], value);
+      this.sources[index].playbackRate.value = value;
     }
   }
 
@@ -243,7 +239,9 @@ export class AudioStreamPlayer3D {
    * Sets the position of the audio source in 3D space.
    */
   set position(value: [x: number, y: number, z: number]) {
-    setPannerPosition(this.pannerNode, value[0], value[1], value[2]);
+    this.pannerNode.positionX.value = value[0];
+    this.pannerNode.positionY.value = value[1];
+    this.pannerNode.positionZ.value = value[2];
   }
 
   get position(): [x: number, y: number, z: number] {
@@ -258,7 +256,9 @@ export class AudioStreamPlayer3D {
    * Sets the orientation of the audio source in 3D space.
    */
   set orientation(value: [x: number, y: number, z: number]) {
-    setPannerOrientation(this.pannerNode, value[0], value[1], value[2]);
+    this.pannerNode.orientationX.value = value[0];
+    this.pannerNode.orientationY.value = value[1];
+    this.pannerNode.orientationZ.value = value[2];
   }
 
   get orientation(): [x: number, y: number, z: number] {
